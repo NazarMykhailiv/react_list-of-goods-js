@@ -27,7 +27,11 @@ function getSortedGoods(goods, sortField, isReversed) {
       break;
 
     case SORT_FIELD_LENGTH:
-      sortedGoods.sort((a, b) => a.length - b.length);
+      sortedGoods.sort((a, b) => {
+        const diff = a.length - b.length;
+
+        return diff !== 0 ? diff : a.localeCompare(b);
+      });
       break;
 
     default:
@@ -41,13 +45,34 @@ function getSortedGoods(goods, sortField, isReversed) {
   return sortedGoods;
 }
 
+function areArraysEqual(a, b) {
+  return a.length === b.length && a.every((item, i) => item === b[i]);
+}
+
 export const App = () => {
   const [sortField, setSortField] = useState('');
   const [isReversed, setIsReversed] = useState(false);
 
   const sortedGoods = getSortedGoods(goodsFromServer, sortField, isReversed);
 
-  const isChanged = sortField !== '' || isReversed;
+  const shouldShowReset = !areArraysEqual(sortedGoods, goodsFromServer);
+
+  function handleSortByName() {
+    setSortField(SORT_FIELD_NAME);
+  }
+
+  function handleSortByLength() {
+    setSortField(SORT_FIELD_LENGTH);
+  }
+
+  function handleToggleReverse() {
+    setIsReversed(prev => !prev);
+  }
+
+  function handleReset() {
+    setSortField('');
+    setIsReversed(false);
+  }
 
   return (
     <div className="section content">
@@ -57,7 +82,7 @@ export const App = () => {
           className={`button is-info ${
             sortField === SORT_FIELD_NAME ? '' : 'is-light'
           }`}
-          onClick={() => setSortField(SORT_FIELD_NAME)}
+          onClick={handleSortByName}
         >
           Sort alphabetically
         </button>
@@ -67,7 +92,7 @@ export const App = () => {
           className={`button is-success ${
             sortField === SORT_FIELD_LENGTH ? '' : 'is-light'
           }`}
-          onClick={() => setSortField(SORT_FIELD_LENGTH)}
+          onClick={handleSortByLength}
         >
           Sort by length
         </button>
@@ -75,19 +100,16 @@ export const App = () => {
         <button
           type="button"
           className={`button is-warning ${isReversed ? '' : 'is-light'}`}
-          onClick={() => setIsReversed(!isReversed)}
+          onClick={handleToggleReverse}
         >
           Reverse
         </button>
 
-        {isChanged && (
+        {shouldShowReset && (
           <button
             type="button"
             className="button is-danger"
-            onClick={() => {
-              setSortField('');
-              setIsReversed(false);
-            }}
+            onClick={handleReset}
           >
             Reset
           </button>
